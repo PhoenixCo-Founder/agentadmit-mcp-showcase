@@ -67,4 +67,22 @@ export async function verifyToolCall({ token, tool, scope, args, summary, attest
   });
 }
 
+/**
+ * The hosted consent page hands the human a ONE-TIME connection token
+ * (ag_ct_…). Exchanging it for the access token (ag_at_…) is the server's
+ * job, not the human's: POST /api/v1/exchange with no API key (the
+ * connection token is the credential). Single use — the access token that
+ * comes back is what the agent presents from then on.
+ */
+export async function exchangeConnectionToken(connectionToken, { agentLabel = 'Coding agent (demo)' } = {}) {
+  const res = await fetch(`${apiBase()}/api/v1/exchange`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: connectionToken, agent_label: agentLabel }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(`exchange_failed: ${data.error || res.status}`);
+  return { accessToken: data.access_token, connectionId: data.connection_id, scopes: data.scopes, expiresAt: data.expires_at };
+}
+
 export { ConfirmationRequiredError, VerifyRefusedError };

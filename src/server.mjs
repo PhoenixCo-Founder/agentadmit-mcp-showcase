@@ -20,11 +20,11 @@ import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { openDb, seed, listTables, runQuery, insertRow, deleteRows, dropTable, countWhere } from './db.mjs';
-import { init, mintConsentLink, verifyToolCall, ConfirmationRequiredError, VerifyRefusedError } from './agentadmit.mjs';
+import { init, mintConsentLink, verifyToolCall, exchangeConnectionToken, ConfirmationRequiredError, VerifyRefusedError } from './agentadmit.mjs';
 import { TOOL_SCOPE, ALL_SCOPES, RECOMMENDED_SCOPES } from './scopes.mjs';
 
 const credentialArgs = {
-  agentadmit_token: z.string().optional().describe('AgentAdmit access token (ag_at_…) for the connection the user granted this agent. Omit it to receive an authorization link for the user.'),
+  agentadmit_token: z.string().optional().describe('The token the user pasted after authorizing on the AgentAdmit page (ag_ct_… one-time connection token, or the ag_at_… access token returned by this server after exchange). Omit it to receive an authorization link for the user.'),
   action_attestation_id: z.string().optional().describe('On a retry after the user confirmed a destructive action on the hosted page: the action_session_id from the confirmation_required error.'),
 };
 
@@ -44,6 +44,20 @@ export function buildServer({ db, userId = process.env.DEMO_USER_ID || `user_${r
         `This server requires the user's authorization before any tool runs.\n` +
         `Ask your human to open ${link.url} (valid until ${link.expires_at}), choose which permissions this agent gets and for how long, confirm with their passkey, and paste the generated token back to you.\n` +
         `Then call the tool again with agentadmit_token. You cannot complete that page yourself.`) };
+    }
+    // One-time connection token from the hosted page → exchange it here
+    // (server-side, no API key) and tell the agent which access token to
+    // use from now on. The connection token is dead after this call.
+    if (args.agentadmit_token.startsWith('ag_ct_')) {
+      try {
+        const ex = await exchangeConnectionToken(args.agentadmit_token);
+        return { error: fail(
+          `token_exchanged: the user's one-time connection token was exchanged for an access token. ` +
+          `Connection ${ex.connectionId}, permissions: ${(ex.scopes || []).join(', ')}, valid until ${ex.expiresAt}.\n` +
+          `Call the tool again with agentadmit_token="${ex.accessToken}" and use that access token for every call from now on.`) };
+      } catch (err) {
+        return { error: fail(`exchange_failed: ${err.message}. The one-time token may have expired or already been used; ask the user for a new authorization link (call the tool without agentadmit_token).`) };
+      }
     }
     try {
       const ctx = await verifyToolCall({ token: args.agentadmit_token, tool, scope, args, summary, attestationId: args.action_attestation_id });
