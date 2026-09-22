@@ -1,0 +1,8 @@
+# Copy to agentadmit.yaml (gitignored) and paste the app's key from
+# https://agentadmit.com/dashboard → your app → API keys. Test keys (aa_test_)
+# never bill and never touch live data.
+app_name: "Demo Database MCP"
+app_id: "app_..."
+api_key: "aa_test_..."
+api_base_url: "https://github.com/PhoenixCo-Founder/agentadmit-mcp-showcase"
+scopes: []

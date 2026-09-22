@@ -1,0 +1,5 @@
+node_modules/
+agentadmit.yaml
+*.db
+*.db-journal
+.env*
