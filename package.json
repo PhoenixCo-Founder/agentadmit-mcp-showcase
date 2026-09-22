@@ -5,8 +5,12 @@
   "description": "A database MCP server protected by AgentAdmit: user-granted scopes, confirm-each-time on destructive tools, decline, revoke.",
   "type": "module",
   "license": "MIT",
-  "engines": { "node": ">=22.13" },
-  "bin": { "agentadmit-mcp-showcase": "src/server.mjs" },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "bin": {
+    "agentadmit-mcp-showcase": "src/server.mjs"
+  },
   "scripts": {
     "start": "node src/server.mjs",
     "seed": "node scripts/seed-db.mjs",
@@ -14,7 +18,7 @@
     "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
-    "@agentadmit/sdk": "1.11.0",
+    "@agentadmit/sdk": "1.11.1",
     "@modelcontextprotocol/sdk": "1.30.0",
     "zod": "4.6.5"
   }
