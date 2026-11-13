@@ -23,6 +23,9 @@
     "zod": "4.6.7"
   },
   "overrides": {
-    "js-yaml": "4.3.2"
+    "js-yaml": "4.3.2",
+    "hono": "4.13.16",
+    "@hono/node-server": "2.1.6",
+    "ip-address": "10.7.6"
   }
 }
